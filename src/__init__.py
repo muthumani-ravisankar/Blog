@@ -1,5 +1,6 @@
 import json
 def getConfig(key):
+    # add your configuration path
     con_file=r"c:\\Users\muthu\playground\blog\config.json"
     file=open(con_file,'r')
     config=json.loads(file.read())
@@ -7,4 +8,4 @@ def getConfig(key):
     if key in config:
         return config[key]
     else:
-        raise Exception("string {} is not found".format(key))
+        raise Exception("ey {} is not found".format(key))

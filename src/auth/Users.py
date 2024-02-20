@@ -1,6 +1,7 @@
-from flask import Flask, request, Response , session
+from flask import Flask, request, Response , session,jsonify
 from src.database import database
 import bcrypt
+import uuid
 from time import time
 from random import randint
 db = database.getConnection()
@@ -13,6 +14,11 @@ class customError(Exception):
 class Users:
     def welcome(self,name):
         return ("Welcome {} !".format(name))
+    
+
+    def generate_user_id():
+    # Generate a UUID version 4 (random)
+        return str(uuid.uuid4())
     
     @staticmethod
     def register(username, password, confirm_password,email):
@@ -28,13 +34,17 @@ class Users:
                 password = password.encode()
                 salt = bcrypt.gensalt() # like a secret key that is embedded into the password for verification purposes while logging in
                 password = bcrypt.hashpw(password, salt)    
+                user_id = Users.generate_user_id()
                 _id = users.insert_one({
+                    "_id":user_id,
                     "username": username, # TODO: Make as unique index to avoid duplicate entries
                     "password": password,
                     "email":email,
+                    "isAdmin":False,
                     "register_time": time(),
                     "active": False,
-                    "activate_token": randint(100000, 999999)           
+                    "activate_token": randint(100000, 999999),
+                    "blogs":[]      
                 }) 
             else:
                 raise customError("email {} already exist".format(email)) 
@@ -42,13 +52,10 @@ class Users:
         else:
              raise customError("username {} already exist".format(username)) 
         
-        # we should send this OTP (activate_token) via SMS or Email to the user
-        # TODO: Use gmail to send emails with OTP
-        
         return str(username)
     
     @staticmethod
-    def athunticate(username,password):
+    def authenticate(username,password):
         result = users.find_one({
             'username':username
         })
@@ -57,9 +64,26 @@ class Users:
             password_hash = result['password']
             if(bcrypt.checkpw(password.encode(),password_hash)):
                 #TODO: Register a session and return a session id on successful login
-               return str(username)
+               session['islogged']=True
+               session['uid']=result['_id']
+               return session['uid']
             else:
                 raise customError('Incorrect password')
         else:
             raise customError("Invalid credential")
+    
+    @staticmethod
+    def getUsers():
+        u=list(users.find({}))
+        for user in u:
+            user['password']=str(user['password'])
+        if u:
+            return jsonify(u)
+        else:
+            raise customError("No users found")
+        
+    @staticmethod
+    def isAdmin():
+        user = users.find_one({"_id":session['uid']})
+        return user['isAdmin']   
 
