@@ -69,8 +69,34 @@ def logout():
 @bp.route('/getusers')
 def getusers():
     if session.get('islogged'):
-        result =Users.getUsers()
-        return result,200
+        try:
+            result =Users.getUsers()
+            return result,200
+        except customError as e:
+            return{
+                'Exception':str(e)
+            },400
+    else:
+        return {
+            "message":"You are not authenticated"
+        },401
+    
+@bp.route('/changepw',methods=['POST'])
+def changepassword():
+    if session.get('islogged'):
+        try:
+            if("old_password" in request.form and "new_password" in request.form):
+                old_pass=request.form["old_password"]
+                new_pass=request.form["new_password"]
+                Users.changePassword(old_pass,new_pass)
+                return {
+                    "message":"password updated successfully.",
+                    "result":True
+                },200
+        except customError as e:
+            return{
+                'Exception':str(e)
+            },400
     else:
         return {
             "message":"You are not authenticated"

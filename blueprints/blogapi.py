@@ -60,7 +60,7 @@ def read():
     if session.get('islogged'):
         try:
             result= Blog.readBlog(session['uid'])    
-            return result
+            return result,200
         except customError as e:
             return {
                 'Exception':str(e)
@@ -76,7 +76,7 @@ def getblog():
             blog_id=request.args.get('blog_id')
             try:
                 result=Blog.getBlog(session['uid'],blog_id)
-                return result
+                return result,200
             except customError as e:
                 return {
                     'Exception': str(e)
@@ -84,6 +84,34 @@ def getblog():
         else:
             return {
                 "message":"require <blog_id> in GET params"
+            }
+
+    else:
+        return {
+            'message':'You are not authenticated'
+        }
+    
+@bp.route('/editblog',methods=['POST'])
+def editblog():
+    if session.get('islogged'):
+        if('blog_tittle' in request.form and 'blog_content' in request.form and 'blog_id' in request.form ):
+            blog_tittle = request.form['blog_tittle']
+            blog_content = request.form['blog_content']
+            blog_id = request.form['blog_id']
+            try:
+                result=Blog.editBlog(session['uid'],blog_id,blog_tittle,blog_content)
+                if result:
+                    return {
+                        "message":"Blog updated successfully.",
+                        "blog_id":blog_id
+                    }
+            except customError as e:
+                return {
+                    'Exception': str(e)
+                },400
+        else:
+            return {
+                'message':'Not enough parameters'
             }
 
     else:

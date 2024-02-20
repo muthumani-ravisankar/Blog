@@ -1,6 +1,5 @@
 from flask import Flask, request, Response , session,jsonify
 from src.database import database
-import bcrypt
 import uuid
 from time import time
 from random import randint
@@ -72,12 +71,25 @@ class Blog:
             raise customError("userid: {} does not exist".format(user_id))
       
     @staticmethod
-    def editBlog(u_id,b_id,b_tittle=None,b_content=None):
+    def editBlog(u_id,b_id,b_tittle,b_content):
         user=users.find_one({"_id":u_id})
         if user:
             blog = next((blog for blog in user.get('blogs', []) if str(blog.get('blog_id')) == b_id), None)
-            blog_tittle= blog['blog_tittle'] if b_tittle==None else b_tittle
-            blog_content= blog['blog_content'] if b_content==None else b_content
+            result=users.update_one(
+            {
+                "_id": u_id,
+                "blogs.blog_id": b_id
+            },
+            {
+                "$set": {
+                "blogs.$.blog_tittle": b_tittle,
+                "blogs.$.blog_content": b_content,
+                "blogs.$.updated_at": time()
+                }
+            }
+            )
+            return result
+            
 
         else:
             raise customError("userid: {} does not exist".format(u_id))

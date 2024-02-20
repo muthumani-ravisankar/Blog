@@ -71,7 +71,31 @@ class Users:
                 raise customError('Incorrect password')
         else:
             raise customError("Invalid credential")
-    
+        
+
+    @staticmethod
+    def changePassword(old_password,new_password):
+        user= users.find_one({"_id":session['uid']})
+        if user:
+            password_hash= user['password']
+            if(bcrypt.checkpw(old_password.encode(),password_hash)):
+                hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+                users.update_one(
+                    {
+                        "_id": session['uid']                        
+                    },
+                    {
+                        "$set": {
+                        "password": hashed_password                        
+                        }
+                    }
+                )
+            else:
+                raise customError("Incorrect password")
+        else:
+            raise customError("user not found")
+
+
     @staticmethod
     def getUsers():
         u=list(users.find({}))
@@ -81,7 +105,7 @@ class Users:
             return jsonify(u)
         else:
             raise customError("No users found")
-        
+      
     @staticmethod
     def isAdmin():
         user = users.find_one({"_id":session['uid']})
