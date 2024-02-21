@@ -58,6 +58,7 @@ def login():
 def logout():
     if session.get('islogged'):
         session['islogged']=False
+        session.clear()
         return {
             'message':'logged out Successfully'
         },200

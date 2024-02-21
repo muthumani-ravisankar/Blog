@@ -91,7 +91,7 @@ class Users:
                     }
                 )
             else:
-                raise customError("Incorrect password")
+                raise customError("Incorrect old password")
         else:
             raise customError("user not found")
 
